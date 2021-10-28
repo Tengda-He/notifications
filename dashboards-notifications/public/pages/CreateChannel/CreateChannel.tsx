@@ -53,7 +53,7 @@ import {
   ROUTES,
 } from '../../utils/constants';
 import { getErrorMessage } from '../../utils/helpers';
-import { HeaderItemType } from '../Channels/types';
+import { HeaderItemType, WebhookHttpType, WebhookMethodType } from '../Channels/types';
 import { MainContext } from '../Main/Main';
 import { ChannelAvailabilityPanel } from './components/ChannelAvailabilityPanel';
 import { ChannelNamePanel } from './components/ChannelNamePanel';
@@ -136,15 +136,17 @@ export function CreateChannel(props: CreateChannelsProps) {
     keyof typeof CUSTOM_WEBHOOK_ENDPOINT_TYPE
   >('WEBHOOK_URL');
   const [webhookURL, setWebhookURL] = useState('');
+  const [customURLType, setCustomURLType] = useState<WebhookHttpType>('HTTPS');
   const [customURLHost, setCustomURLHost] = useState('');
   const [customURLPort, setCustomURLPort] = useState('');
   const [customURLPath, setCustomURLPath] = useState('');
+  const [webhookMethod, setWebhookMethod] = useState<WebhookMethodType>('POST');
   const [webhookParams, setWebhookParams] = useState<HeaderItemType[]>([]);
   const [webhookHeaders, setWebhookHeaders] = useState<HeaderItemType[]>([
     { key: 'Content-Type', value: 'application/json' },
   ]);
   const [topicArn, setTopicArn] = useState(''); // SNS topic ARN
-  const [roleArn, setRoleArn] = useState(''); // IAM role ARN (optional for ODFE)
+  const [roleArn, setRoleArn] = useState(''); // IAM role ARN (optional for open source distribution)
 
   const [
     sourceCheckboxIdToSelectedMap,
@@ -233,6 +235,7 @@ export function CreateChannel(props: CreateChannelsProps) {
         setCustomURLHost(webhookObject.customURLHost);
         setCustomURLPort(webhookObject.customURLPort);
         setCustomURLPath(webhookObject.customURLPath);
+        setWebhookMethod(webhookObject.webhookMethod);
         setWebhookParams(webhookObject.webhookParams);
         setWebhookHeaders(webhookObject.webhookHeaders);
       } else if (type === BACKEND_CHANNEL_TYPE.SNS) {
@@ -308,9 +311,11 @@ export function CreateChannel(props: CreateChannelsProps) {
       config.webhook = constructWebhookObject(
         webhookTypeIdSelected,
         webhookURL,
+        customURLType,
         customURLHost,
         customURLPort,
         customURLPath,
+        webhookMethod,
         webhookParams,
         webhookHeaders
       );
@@ -356,26 +361,14 @@ export function CreateChannel(props: CreateChannelsProps) {
           throw error;
         });
 
-      const eventId = await servicesContext.eventService
-        .sendTestMessage(
-          tempChannelId,
-          config.feature_list[0] // for test message any source works
-        )
-        .then((response) => response.event_id);
-
-      await servicesContext.eventService
-        .getNotification(eventId)
-        .then((response) => {
-          if (!response.success) {
-            const error = new Error('Failed to send the test message.');
-            error.stack = JSON.stringify(response.status_list, null, 2);
-            throw error;
-          }
-        });
+      await servicesContext.eventService.sendTestMessage(
+        tempChannelId,
+        config.feature_list[0] // for test message any source works
+      );
       coreContext.notifications.toasts.addSuccess(
         'Successfully sent a test message.'
       );
-    } catch (error) {
+    } catch (error: any) {
       coreContext.notifications.toasts.addError(error?.body || error, {
         title: 'Failed to send the test message.',
         toastMessage: 'View error details and adjust the channel settings.',
@@ -465,12 +458,16 @@ export function CreateChannel(props: CreateChannelsProps) {
               setWebhookTypeIdSelected={setWebhookTypeIdSelected}
               webhookURL={webhookURL}
               setWebhookURL={setWebhookURL}
+              customURLType={customURLType}
+              setCustomURLType={setCustomURLType}
               customURLHost={customURLHost}
               setCustomURLHost={setCustomURLHost}
               customURLPort={customURLPort}
               setCustomURLPort={setCustomURLPort}
               customURLPath={customURLPath}
               setCustomURLPath={setCustomURLPath}
+              webhookMethod={webhookMethod}
+              setWebhookMethod={setWebhookMethod}
               webhookParams={webhookParams}
               setWebhookParams={setWebhookParams}
               webhookHeaders={webhookHeaders}
@@ -547,11 +544,14 @@ export function CreateChannel(props: CreateChannelsProps) {
                   })
                   .catch((error) => {
                     setLoading(false);
-                    coreContext.notifications.toasts.addError(error?.body || error, {
-                      title: `Failed to ${
-                        props.edit ? 'update' : 'create'
-                      } channel.`,
-                    });
+                    coreContext.notifications.toasts.addError(
+                      error?.body || error,
+                      {
+                        title: `Failed to ${
+                          props.edit ? 'update' : 'create'
+                        } channel.`,
+                      }
+                    );
                   });
               }}
             >

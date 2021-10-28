@@ -105,7 +105,7 @@ const mockEmailWithSES: ChannelItemType = {
       'qQ_8gUxOPmIl9Il-5fv0': 'name5',
       '52KTe3xOdSwJeziY43zi': 'name6',
     },
-    invalid_ids: ["52KTe3xOdSwJeziY43zi"],
+    invalid_ids: ['52KTe3xOdSwJeziY43zi'],
     sender_type: 'ses_account',
   },
   config_id: 'QZT3mKxOCn6LSkzIsAzz',
@@ -129,6 +129,7 @@ const mockWebhook: ChannelItemType = {
       key5: 'value5',
       key6: 'value6',
     },
+    method: 'POST',
   },
   config_id: '7mUjsHkBqFjWrmvLc3nl',
   created_time_ms: 1622157784037,
@@ -151,7 +152,7 @@ const mockSNS: ChannelItemType = {
 };
 
 const mockSender: SenderItemType = {
-  name: 'Test sender',
+  name: 'test-sender',
   description: 'test description',
   config_id: '72UysHkBqFjWrmvLFXkB',
   created_time_ms: 1622158742784,
@@ -165,7 +166,7 @@ const mockSender: SenderItemType = {
 };
 
 const mockSESSender: SESSenderItemType = {
-  name: 'Test SES sender',
+  name: 'test-ses-sender',
   description: 'test description',
   config_id: '72HlfUxOdSwJeziYSKxO',
   created_time_ms: 1622158742784,
@@ -178,19 +179,19 @@ const mockSESSender: SESSenderItemType = {
 };
 
 const mockRecipientGroup: RecipientGroupItemType = {
-  name: 'Test sender',
+  name: 'Test recipient group',
   description: 'test description',
   config_id: '72UysHkBqVjWrmvLFXkB',
   created_time_ms: 1622158742784,
   last_updated_time_ms: 1622158742784,
   email_group: {
     recipient_list: [
-      'test1@email.com',
-      'test2@email.com',
-      'test3@email.com',
-      'test4@email.com',
-      'test5@email.com',
-      'test6@email.com',
+      { recipient: 'test1@email.com' },
+      { recipient: 'test2@email.com' },
+      { recipient: 'test3@email.com' },
+      { recipient: 'test4@email.com' },
+      { recipient: 'test5@email.com' },
+      { recipient: 'test6@email.com' },
     ],
   },
 };
@@ -242,7 +243,14 @@ const mockNotification: NotificationItem = {
 
 export const MOCK_DATA = {
   channels: {
-    items: [mockChime, mockSlack, mockEmail, mockEmailWithSES, mockWebhook, mockSNS],
+    items: [
+      mockChime,
+      mockSlack,
+      mockEmail,
+      mockEmailWithSES,
+      mockWebhook,
+      mockSNS,
+    ],
     total: 6,
   },
   chime: mockChime,
